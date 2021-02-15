@@ -1,12 +1,57 @@
-<script lang="ts">
-  import {writable}              from 'svelte/store';
-  import {createEventDispatcher} from 'svelte';
-  import type {Header}           from './types';
+<script context="module">
+  import {writable} from 'svelte/store';
 
-  export let data              = writable([]);
-  export let selected          = '';
-  export let headers: Header[] = [];
-  export let show_headers      = true;
+  export function Store(data, mappings) {
+    data = Array.isArray(data) ? data : [data];
+    if (!('id' in mappings)) throw Error('an "id" field must be defined');
+
+    const rows    = writable([]);
+    const columns = [];
+    const cache   = [];
+
+    function access(path, o) {
+      return path.replace(/\[|]\.?/g, '.').split('.').reduce((a, v) => a && a[v], o);
+    }
+
+    for (const mapping in mappings) if (mappings.hasOwnProperty(mapping)) {
+      columns.push({key: mappings[mapping], title: mapping});
+    }
+
+    for (const record of data) {
+      const row = {};
+
+      for (const mapping in mappings) if (mappings.hasOwnProperty(mapping)) {
+        row[mapping] = access(mappings[mapping], record);
+      }
+
+      cache.push(row);
+    }
+
+    rows.set(cache);
+
+    rows.filter = function (fn) {
+      rows.reset();
+      rows.update(items => {
+        return items.filter(fn);
+      });
+    };
+
+    rows.reset = function () {
+      rows.set(cache);
+    };
+
+    return {rows, columns};
+  }
+</script>
+
+<script>
+  import {createEventDispatcher} from 'svelte';
+
+  export let rows      = writable([]);
+  export let columns   = [];
+  export let selected  = '';
+  export let headers   = true;
+  export let searchbar = false;
 
   const dispatch        = createEventDispatcher();
   const search_criteria = writable('');
@@ -40,8 +85,30 @@
     return path.replace(/\[|]\.?/g, '.').split('.').reduce((a, v) => a && a[v], object) || '';
   }
 
+  function flatten(object) {
+    const result = {};
+
+    for (const field in object) {
+      if (!object.hasOwnProperty(field)) continue;
+
+      if (typeof object[field] == 'object') {
+        const flat = flatten(object[field]);
+
+        for (const f in flat) {
+          if (!flat.hasOwnProperty(f)) continue;
+
+          result[`${field}.${f}`] = flat[f];
+        }
+      } else {
+        result[field] = object[field];
+      }
+    }
+
+    return result;
+  }
+
   function sort(field) {
-    data.update(values => values.sort(function (a, b) {
+    rows.update(values => values.sort(function (a, b) {
       a = access(field, a) ? access(field, a).toUpperCase() : '';
       b = access(field, b) ? access(field, b).toUpperCase() : '';
 
@@ -53,7 +120,7 @@
     sorting.icon = sorting.asc ? 'sort alphabet up icon grey' : 'sort alphabet down icon grey';
   }
 
-  function paginate(items: any[] = []) {
+  function paginate(items = []) {
     if (items) {
       pages.items.length = 0;
       for (let i = 0; i <= items.length; i += pages.size) pages.items.push(items.slice(i, i + pages.size));
@@ -102,15 +169,15 @@
   }
 
   function search(criteria) {
-    const filtered = $data.filter(item => {
-      return headers.map(header => (access(header.key, item) || '').toLowerCase()).join(' ').includes(criteria.toLowerCase());
+    const filtered = $rows.filter(item => {
+      return columns.map(header => (access(header.title, item) || '').toLowerCase()).join(' ').includes(criteria.toLowerCase());
     });
 
     paginate(filtered);
   }
 
   search_criteria.subscribe(search);
-  data.subscribe(paginate);
+  rows.subscribe(paginate);
 </script>
 
 <div class="ui basic segment">
@@ -118,34 +185,37 @@
     <thead>
 
     <!-- SEARCH-->
-    <tr>
-      <th colspan="5">
-        <div class="ui form">
-          <div class="ui fluid icon input">
-            <input type="text" placeholder="Cerca..." bind:value={$search_criteria}>
-            <i class="search icon"></i>
+    {#if (searchbar)}
+      <tr>
+        <th colspan="{columns.length - 1}">
+          <div class="ui form">
+            <div class="ui fluid icon input">
+              <input type="text" placeholder="Cerca..." bind:value={$search_criteria}>
+              <i class="search icon"></i>
+            </div>
           </div>
-        </div>
-      </th>
-    </tr>
+        </th>
+      </tr>
+    {/if}
 
     <!-- HEADERS-->
-    {#if show_headers}
-
+    {#if headers}
       <tr>
-        {#each headers as header}
-          <th class="sticky {header.width} wide" on:click={()=> sort(header.key)}>
-            <div class="ui items">
-              <div class="item">
-                <div class="ui left aligned content">
-                  {header.title}
-                </div>
-                <div class="ui right aligned content">
-                  <i class="{header.key === sorting.key ? sorting.icon: ''}"></i>
+        {#each columns as header}
+          {#if (header.key !== 'id')}
+            <th class="sticky four wide" on:click={()=> sort(header.title)}>
+              <div class="ui items">
+                <div class="item">
+                  <div class="ui left aligned content">
+                    {header.title.toUpperCase()}
+                  </div>
+                  <div class="ui right aligned content">
+                    <i class="{header.title === sorting.key ? sorting.icon: ''}"></i>
+                  </div>
                 </div>
               </div>
-            </div>
-          </th>
+            </th>
+          {/if}
         {/each}
       </tr>
     {/if}
@@ -156,32 +226,20 @@
     {#if pages.items.length}
       {#each pages.current as item}
         <tr class={item.id === selected ? 'selected' : ''} on:click={()=> select(item)}>
-          {#each headers as header,i}
-            {#if header.key === 'email' || header.key === 'phone'}
-              <td class="left aligned" class:sorted={sorting.key === header.key}>
-
-                {#if access(header.key, item).length !== 0}
-                  {access(header.key, item)}
-                {/if}
-
+          {#each columns as header, i}
+            {#if (header.key !== 'id')}
+              <td class:sorted={sorting.key === header.title}>
+                {item[header.title]}
               </td>
-
-            {:else}
-              <td class="{header.align} aligned"
-                  class:sorted={sorting.key === header.key}>
-                {#if i === 0 && (item.parent || item.children)}
-                  <i class="users icon"></i>
-                {/if}
-                {access(header.key, item)}</td>
             {/if}
-
           {/each}
         </tr>
+
       {/each}
     {:else}
       {#each Array(pages.size) as item}
         <tr>
-          {#each headers as header}
+          {#each columns as header}
             <td>
               <div class="ui placeholder">
                 <div class="line"></div>
@@ -192,12 +250,14 @@
       {/each}
     {/if}
     </tbody>
+
+    <!-- FOOTER -->
     <tfoot>
     <tr>
       <th colspan="1">
         {#if pages.items.length}
           <div class="ui left aligned container">
-            {pages.items.flat().length} registri di {$data.flat().length}
+            <!--{pages.items.flat().length} registri di {$rows.flat().length}-->
           </div>
         {:else}
           <div class="ui placeholder">
@@ -207,7 +267,7 @@
           </div>
         {/if}
       </th>
-      <th colspan="3">
+      <th colspan="{columns.length - 3}">
         <div class="ui center aligned container">
           <div class="ui pagination menu">
 
