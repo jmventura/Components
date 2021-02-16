@@ -57,20 +57,8 @@
   const search_criteria = writable('');
 
   selected.subscribe(item => dispatch('select', item));
-
-  const pager = {
-    start:   0,
-    end:     0,
-    size:    5,
-    current: 0,
-    items:   []
-  };
-
-  const pages = {
-    size:    12,
-    current: [],
-    items:   []
-  };
+  // search_criteria.subscribe(search);
+  // rows.subscribe(paginate);
 
   const sorting = {
     asc:  false,
@@ -117,64 +105,24 @@
     sorting.icon = sorting.asc ? 'sort alphabet up icon grey' : 'sort alphabet down icon grey';
   }
 
-  function paginate(items = []) {
-    if (items) {
-      pages.items.length = 0;
-      for (let i = 0; i <= items.length; i += pages.size) pages.items.push(items.slice(i, i + pages.size));
-      pages.current = pages.items[0];
-    }
-
-    const middle       = Math.floor(pager.size / 2);
-    pager.items.length = 0;
-    pager.start        = pager.current - middle;
-    pager.end          = pager.current + middle;
-
-    if (pager.start <= 0) {
-      pager.start = 0;
-      pager.end   = pager.size;
-    }
-
-    if (pager.end >= pages.items.length - 1) {
-      pager.start = pages.items.length - pager.size - 1;
-      pager.end   = pages.items.length - 1;
-    }
-
-    if (pager.size >= pages.items.length) {
-      pager.start = 0;
-      pager.end   = pages.items.length - 1;
-    }
-
-    for (let i = pager.start; i <= pager.end; i++) pager.items.push(i);
-  }
-
-  function go(num) {
-    if (num < 0) num = 0;
-    if (num >= pages.items.length) num = pages.items.length - 1;
-
-    pager.current = num;
-    pages.current = pages.items[num];
-
-    paginate();
-  }
-
-  function up() {
-    go((pager.current + 1) < pages.items.length ? (pager.current + 1) : pages.items.length - 1);
-  }
-
-  function down() {
-    go((pager.current - 1) >= 0 ? (pager.current - 1) : 0);
-  }
-
   function search(criteria) {
     const filtered = $rows.filter(item => {
       return columns.map(header => (access(header.title, item) || '').toLowerCase()).join(' ').includes(criteria.toLowerCase());
     });
 
-    paginate(filtered);
   }
 
-  search_criteria.subscribe(search);
-  rows.subscribe(paginate);
+  const paging = {
+    size:    12,
+    index:   0,
+    current: $rows.slice(0, 12)
+  };
+
+  function move(direction = 1) {
+    paging.index += direction;
+    paging.current = $rows.slice(paging.index * paging.size, (paging.index * paging.size) + paging.size);
+    console.log(paging);
+  }
 </script>
 
 <div class="ui basic segment">
@@ -220,76 +168,77 @@
 
     <!-- BODY -->
     <tbody>
-    {#if pages.items.length}
-      {#each pages.current as item}
-        <tr class={item.id === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
-          {#each columns as header, i}
-            {#if (header.key !== 'id')}
-              <td class:sorted={sorting.key === header.title}>
-                {item[header.title]}
-              </td>
-            {/if}
-          {/each}
-        </tr>
-
-      {/each}
-    {:else}
-      {#each Array(pages.size) as item}
-        <tr>
-          {#each columns as header}
-            <td>
-              <div class="ui placeholder">
-                <div class="line"></div>
-              </div>
+    <!--{#if pages.items.length}-->
+    {#each paging.current as item, i}
+      <!--{#each pages.current as item}-->
+      <tr class={item.id === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
+        {#each columns as header, i}
+          {#if (header.key !== 'id')}
+            <td class:sorted={sorting.key === header.title}>
+              {item[header.title]}
             </td>
-          {/each}
-        </tr>
-      {/each}
-    {/if}
+          {/if}
+        {/each}
+      </tr>
+
+    {/each}
+    <!--{:else}-->
+    <!--  {#each Array(pages.size) as item}-->
+    <!--    <tr>-->
+    <!--      {#each columns as header}-->
+    <!--        <td>-->
+    <!--          <div class="ui placeholder">-->
+    <!--            <div class="line"></div>-->
+    <!--          </div>-->
+    <!--        </td>-->
+    <!--      {/each}-->
+    <!--    </tr>-->
+    <!--  {/each}-->
+    <!--{/if}-->
     </tbody>
 
     <!-- FOOTER -->
     <tfoot>
     <tr>
       <th colspan="1">
-        {#if pages.items.length}
-          <div class="ui left aligned container">
-            <!--{pages.items.flat().length} registri di {$rows.flat().length}-->
-          </div>
-        {:else}
+        <!--{#if pages.items.length}-->
+        <!--  <div class="ui left aligned container">-->
+        <!--    &lt;!&ndash;{pages.items.flat().length} registri di {$rows.flat().length}&ndash;&gt;-->
+        <!--  </div>-->
+        <!--{:else}-->
           <div class="ui placeholder">
             <div class="header">
               <div class="full line"></div>
             </div>
           </div>
-        {/if}
+        <!--{/if}-->
       </th>
       <th colspan="{columns.length - 3}">
         <div class="ui center aligned container">
           <div class="ui pagination menu">
 
-            <a class="icon item" on:click={down}>
+            <a class="icon item" on:click={()=>move(-1)}>
               <i class="left chevron icon"></i>
             </a>
 
-            {#if pager.start > 0}
-              <a class="icon item" on:click={()=>go(pager.current-pager.size-1)}>
+            <!--{#if pager.start > 0}-->
+              <a class="icon item" on:click={()=>move(-1)}>
                 ...
               </a>
-            {/if}
+            <!--{/if}-->
 
-            {#each pager.items as pagination}
-              <a class:active={pager.current === pagination} class="item"
-                 on:click={()=>go(pagination)}>{pagination + 1}</a>
-            {/each}
+            <!--{#each pager.items as pagination}-->
+            <!--  <a class:active={pager.current === pagination} class="item" on:click={()=>move(1)}>-->
+            <!--  </a>-->
+            <!--{/each}-->
 
-            {#if pager.end < pages.items.length - 1}
-              <a class="icon item" on:click={()=>go(pager.current+pager.size+1)}>
+            <!--{#if pager.end < pages.items.length - 1}-->
+              <a class="icon item" on:click={()=>move(1)}>
                 ...
               </a>
-            {/if}
+            <!--{/if}-->
 
-            <a class="icon item" on:click={up}>
+            <a class="icon item" on:click={()=>move(1)}>
               <i class="right chevron icon"></i>
             </a>
 
@@ -297,17 +246,17 @@
         </div>
       </th>
       <th colspan="1">
-        {#if pages.items.length}
-          <div class="ui right aligned container">
-            pagina {pager.current + 1} di {pages.items.length}
-          </div>
-        {:else}
+        <!--{#if pages.items.length}-->
+        <!--  <div class="ui right aligned container">-->
+        <!--    pagina {pager.current + 1} di {pages.items.length}-->
+        <!--  </div>-->
+        <!--{:else}-->
           <div class="ui placeholder">
             <div class="header">
               <div class="full line"></div>
             </div>
           </div>
-        {/if}
+        <!--{/if}-->
       </th>
     </tr>
     </tfoot>
