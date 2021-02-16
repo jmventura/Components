@@ -47,19 +47,16 @@
 <script>
   import {createEventDispatcher} from 'svelte';
 
-  export let rows      = writable([]);
-  export let columns   = [];
-  export let selected  = '';
-  export let headers   = true;
+  export let store     = Store({}, {});
+  export let headers   = false;
   export let searchbar = false;
 
+  const {rows, columns} = store;
   const dispatch        = createEventDispatcher();
+  const selected        = writable(null);
   const search_criteria = writable('');
 
-  function select(item) {
-    selected = item.id;
-    dispatch('select', item);
-  }
+  selected.subscribe(item => dispatch('select', item));
 
   const pager = {
     start:   0,
@@ -225,7 +222,7 @@
     <tbody>
     {#if pages.items.length}
       {#each pages.current as item}
-        <tr class={item.id === selected ? 'selected' : ''} on:click={()=> select(item)}>
+        <tr class={item.id === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
           {#each columns as header, i}
             {#if (header.key !== 'id')}
               <td class:sorted={sorting.key === header.title}>
