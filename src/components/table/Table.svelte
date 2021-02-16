@@ -1,5 +1,5 @@
 <script context="module">
-  import {writable} from 'svelte/store';
+  import {writable, derived} from 'svelte/store';
 
   export function Store(data, mappings) {
     data = Array.isArray(data) ? data : [data];
@@ -50,15 +50,18 @@
   export let store     = Store({}, {});
   export let headers   = false;
   export let searchbar = false;
+  export let page_size = 12;
 
   const {rows, columns} = store;
+  const cache           = $rows;
   const dispatch        = createEventDispatcher();
   const selected        = writable(null);
   const search_criteria = writable('');
+  let current_page      = 1;
+  let page              = derived(rows, $rows => $rows.slice(current_page * page_size, (current_page * page_size) + page_size));
 
   selected.subscribe(item => dispatch('select', item));
-  // search_criteria.subscribe(search);
-  // rows.subscribe(paginate);
+  search_criteria.subscribe(search);
 
   const sorting = {
     asc:  false,
@@ -68,28 +71,6 @@
 
   function access(path, object) {
     return path.replace(/\[|]\.?/g, '.').split('.').reduce((a, v) => a && a[v], object) || '';
-  }
-
-  function flatten(object) {
-    const result = {};
-
-    for (const field in object) {
-      if (!object.hasOwnProperty(field)) continue;
-
-      if (typeof object[field] == 'object') {
-        const flat = flatten(object[field]);
-
-        for (const f in flat) {
-          if (!flat.hasOwnProperty(f)) continue;
-
-          result[`${field}.${f}`] = flat[f];
-        }
-      } else {
-        result[field] = object[field];
-      }
-    }
-
-    return result;
   }
 
   function sort(field) {
@@ -103,26 +84,29 @@
     sorting.key  = field;
     sorting.asc  = !sorting.asc;
     sorting.icon = sorting.asc ? 'sort alphabet up icon grey' : 'sort alphabet down icon grey';
+    page         = $rows.slice(current_page * page_size, (current_page * page_size) + page_size);
   }
 
   function search(criteria) {
-    const filtered = $rows.filter(item => {
+
+    const filtered = cache.filter(item => {
       return columns.map(header => (access(header.title, item) || '').toLowerCase()).join(' ').includes(criteria.toLowerCase());
     });
 
+    rows.set(filtered);
+    move(current_page);
   }
 
-  const paging = {
-    size:    12,
-    index:   0,
-    current: $rows.slice(0, 12)
-  };
+  function move(index) {
+    const pages = Math.ceil($rows.length / page_size);
 
-  function move(direction = 1) {
-    paging.index += direction;
-    paging.current = $rows.slice(paging.index * paging.size, (paging.index * paging.size) + paging.size);
-    console.log(paging);
+    if (index < 1 || index >= pages) return;
+
+    page         = $rows.slice(index * page_size, (index * page_size) + page_size);
+    current_page = index;
+    console.log(current_page, 'of', pages - 1, $rows.length);
   }
+
 </script>
 
 <div class="ui basic segment">
@@ -135,7 +119,9 @@
         <th colspan="{columns.length - 1}">
           <div class="ui form">
             <div class="ui fluid icon input">
-              <input type="text" placeholder="Cerca..." bind:value={$search_criteria}>
+              <label>
+                <input type="text" placeholder="Cerca..." bind:value={$search_criteria}>
+              </label>
               <i class="search icon"></i>
             </div>
           </div>
@@ -169,7 +155,7 @@
     <!-- BODY -->
     <tbody>
     <!--{#if pages.items.length}-->
-    {#each paging.current as item, i}
+    {#each page as item, i}
       <!--{#each pages.current as item}-->
       <tr class={item.id === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
         {#each columns as header, i}
@@ -206,25 +192,25 @@
         <!--    &lt;!&ndash;{pages.items.flat().length} registri di {$rows.flat().length}&ndash;&gt;-->
         <!--  </div>-->
         <!--{:else}-->
-          <div class="ui placeholder">
-            <div class="header">
-              <div class="full line"></div>
-            </div>
+        <div class="ui placeholder">
+          <div class="header">
+            <div class="full line"></div>
           </div>
+        </div>
         <!--{/if}-->
       </th>
       <th colspan="{columns.length - 3}">
         <div class="ui center aligned container">
           <div class="ui pagination menu">
 
-            <a class="icon item" on:click={()=>move(-1)}>
+            <a class="icon item" on:click={()=>move(current_page - 1)}>
               <i class="left chevron icon"></i>
             </a>
 
             <!--{#if pager.start > 0}-->
-              <a class="icon item" on:click={()=>move(-1)}>
-                ...
-              </a>
+            <!--<a class="icon item" on:click={()=>move(-1)}>-->
+            <!--  ...-->
+            <!--</a>-->
             <!--{/if}-->
 
             <!--{#each pager.items as pagination}-->
@@ -233,12 +219,12 @@
             <!--{/each}-->
 
             <!--{#if pager.end < pages.items.length - 1}-->
-              <a class="icon item" on:click={()=>move(1)}>
-                ...
-              </a>
+            <!--<a class="icon item" on:click={()=>move(1)}>-->
+            <!--  ...-->
+            <!--</a>-->
             <!--{/if}-->
 
-            <a class="icon item" on:click={()=>move(1)}>
+            <a class="icon item" on:click={()=>move(current_page + 1)}>
               <i class="right chevron icon"></i>
             </a>
 
@@ -251,11 +237,11 @@
         <!--    pagina {pager.current + 1} di {pages.items.length}-->
         <!--  </div>-->
         <!--{:else}-->
-          <div class="ui placeholder">
-            <div class="header">
-              <div class="full line"></div>
-            </div>
+        <div class="ui placeholder">
+          <div class="header">
+            <div class="full line"></div>
           </div>
+        </div>
         <!--{/if}-->
       </th>
     </tr>

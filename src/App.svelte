@@ -10,7 +10,7 @@
     email:    'email'
   };
   const print    = item => console.log(item.detail);
-  const store    = Store(contacts, mappings);
+  const store    = Store(contacts.filter(item => item.email), mappings);
   const filter   = name => () => store.rows.filter(item => item['nome'] === name);
 </script>
 
