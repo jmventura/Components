@@ -16,8 +16,8 @@
 
 <main>
   <div class="ui basic segment">
-    <button class="ui button" on:click={filter('Luigi')}>Filter by Name = Luigi</button>
-    <button class="ui button" on:click={filter('Luca')}>Filter by Name = Luca</button>
+    <button class="ui button" on:click={filter('Franco')}>Filter by Name = Franco</button>
+    <button class="ui button" on:click={filter('Paolo')}>Filter by Name = Paolo</button>
     <button class="ui button" on:click={store.rows.reset}>Reset filter</button>
   </div>
 

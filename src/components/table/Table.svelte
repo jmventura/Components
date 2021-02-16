@@ -58,12 +58,24 @@
   const selected        = writable(null);
   const search_criteria = writable('');
   const sorting         = {asc: false, key: null, icon: ''};
-
-  let current_page = 1;
-  let page         = $rows.slice(current_page * page_size, (current_page * page_size) + page_size);
+  const paging          = {index: 1, current: [], pages: 0};
 
   selected.subscribe(item => dispatch('select', item));
   search_criteria.subscribe(search);
+
+  rows.subscribe(paginate);
+
+  function paginate(records) {
+    paging.pages = Math.ceil(records.length / page_size) >= 1 ? Math.ceil(records.length / page_size) : 1;
+
+    if (records.length <= page_size) {
+      paging.current = records;
+    } else {
+      paging.current = records.slice(paging.index * page_size, (paging.index * page_size) + page_size);
+    }
+
+    console.log('page', paging.index, 'of', paging.pages - 1, '(', records.length, 'records )');
+  }
 
   function sort(field) {
     rows.update(values => values.sort(function (a, b) {
@@ -76,26 +88,23 @@
     sorting.key  = field;
     sorting.asc  = !sorting.asc;
     sorting.icon = sorting.asc ? 'sort alphabet up icon grey' : 'sort alphabet down icon grey';
-    page         = $rows.slice(current_page * page_size, (current_page * page_size) + page_size);
   }
 
   function search(criteria) {
-    const filtered = cache.filter(item => {
-      return columns.map(header => item[header.title].toLowerCase()).join(' ').includes(criteria.toLowerCase());
-    });
+    // if (!$search_criteria) return;
+
+    const filtered = cache.filter(row => columns
+        .map(header => row[header.title].toLowerCase())
+        .join(' ')
+        .includes(criteria.toLowerCase()));
 
     rows.set(filtered);
-    move(current_page);
   }
 
-  function move(index) {
-    const pages = Math.ceil($rows.length / page_size);
-
-    if (index < 1 || index >= pages) return;
-
-    page         = $rows.slice(index * page_size, (index * page_size) + page_size);
-    current_page = index;
-    console.log(current_page, 'of', pages - 1, $rows.length);
+  function move(to) {
+    if (to < 1 || to >= paging.pages) return;
+    paging.index = to;
+    paginate($rows);
   }
 
 </script>
@@ -146,7 +155,7 @@
     <!-- BODY -->
     <tbody>
     <!--{#if pages.items.length}-->
-    {#each page as item, i}
+    {#each paging.current as item, i}
       <!--{#each pages.current as item}-->
       <tr class={item.id === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
         {#each columns as header, i}
@@ -194,7 +203,7 @@
         <div class="ui center aligned container">
           <div class="ui pagination menu">
 
-            <a class="icon item" on:click={()=>move(current_page - 1)}>
+            <a class="icon item" on:click={()=>move(paging.index - 1)}>
               <i class="left chevron icon"></i>
             </a>
 
@@ -215,7 +224,7 @@
             <!--</a>-->
             <!--{/if}-->
 
-            <a class="icon item" on:click={()=>move(current_page + 1)}>
+            <a class="icon item" on:click={()=>move(paging.index + 1)}>
               <i class="right chevron icon"></i>
             </a>
 
