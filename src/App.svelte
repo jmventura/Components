@@ -21,5 +21,5 @@
     <button class="ui button" on:click={store.rows.reset}>Reset filter</button>
   </div>
 
-  <TableView {store} headers="{true}" searchbar="{true}" on:select={print}/>
+  <TableView {store} headers="{true}" search="{true}" on:select={print}/>
 </main>

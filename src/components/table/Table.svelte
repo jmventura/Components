@@ -48,21 +48,20 @@
 <script>
   import {createEventDispatcher} from 'svelte';
 
-  export let store     = Store({}, {});
-  export let headers   = false;
-  export let searchbar = false;
-  export let page_size = 12;
+  export let store   = Store({}, {});
+  export let headers = false;
+  export let search  = false;
 
+  const page_size       = 12;
   const {rows, columns} = store;
   const dispatch        = createEventDispatcher();
   const selected        = writable(null);
-  const search_criteria = writable('');
+  const criteria        = writable('');
   const sorting         = {asc: false, key: null, icon: ''};
   const paging          = {index: 1, current: [], pages: 0};
 
   selected.subscribe(item => dispatch('select', item));
-  search_criteria.subscribe(search);
-
+  criteria.subscribe(find);
   rows.subscribe(paginate);
 
   function paginate(records) {
@@ -90,13 +89,13 @@
     sorting.icon = sorting.asc ? 'sort alphabet up icon grey' : 'sort alphabet down icon grey';
   }
 
-  function search(criteria) {
-    // if (!$search_criteria) return;
+  function find(patter) {
+    if (!patter) return;
 
     const filtered = cache.filter(row => columns
         .map(header => row[header.title].toLowerCase())
         .join(' ')
-        .includes(criteria.toLowerCase()));
+        .includes(patter.toLowerCase()));
 
     rows.set(filtered);
   }
@@ -114,13 +113,13 @@
     <thead>
 
     <!-- SEARCH-->
-    {#if (searchbar)}
+    {#if (search)}
       <tr>
         <th colspan="{columns.length - 1}">
           <div class="ui form">
             <div class="ui fluid icon input">
               <label>
-                <input type="text" placeholder="Cerca..." bind:value={$search_criteria}>
+                <input type="text" placeholder="Cerca..." bind:value={$criteria}>
               </label>
               <i class="search icon"></i>
             </div>
