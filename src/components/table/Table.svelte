@@ -1,13 +1,14 @@
 <script context="module">
   import {writable} from 'svelte/store';
 
+  const cache = [];
+
   export function Store(data, mappings) {
     data = Array.isArray(data) ? data : [data];
     if (!('id' in mappings)) throw Error('an "id" field must be defined');
 
     const rows    = writable([]);
     const columns = [];
-    const cache   = [];
 
     function access(path, o) {
       return path.replace(/\[|]\.?/g, '.').split('.').reduce((a, v) => a && a[v], o);
@@ -53,30 +54,21 @@
   export let page_size = 12;
 
   const {rows, columns} = store;
-  const cache           = $rows;
   const dispatch        = createEventDispatcher();
   const selected        = writable(null);
   const search_criteria = writable('');
-  let current_page      = 1;
-  let page              = $rows.slice(current_page * page_size, (current_page * page_size) + page_size);
+  const sorting         = {asc: false, key: null, icon: ''};
+
+  let current_page = 1;
+  let page         = $rows.slice(current_page * page_size, (current_page * page_size) + page_size);
 
   selected.subscribe(item => dispatch('select', item));
   search_criteria.subscribe(search);
 
-  const sorting = {
-    asc:  false,
-    key:  null,
-    icon: ''
-  };
-
-  function access(path, object) {
-    return path.replace(/\[|]\.?/g, '.').split('.').reduce((a, v) => a && a[v], object) || '';
-  }
-
   function sort(field) {
     rows.update(values => values.sort(function (a, b) {
-      a = access(field, a) ? access(field, a).toUpperCase() : '';
-      b = access(field, b) ? access(field, b).toUpperCase() : '';
+      a = a[field].toLowerCase();
+      b = b[field].toLowerCase();
 
       return sorting.asc ? a >= b ? 1 : -1 : a <= b ? 1 : -1;
     }));
@@ -89,11 +81,11 @@
 
   function search(criteria) {
     const filtered = cache.filter(item => {
-      return columns.map(header => (access(header.title, item) || '').toLowerCase()).join(' ').includes(criteria.toLowerCase());
+      return columns.map(header => item[header.title].toLowerCase()).join(' ').includes(criteria.toLowerCase());
     });
 
     rows.set(filtered);
-    move(current_page)
+    move(current_page);
   }
 
   function move(index) {
