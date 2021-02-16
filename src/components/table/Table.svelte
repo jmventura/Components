@@ -1,5 +1,5 @@
 <script context="module">
-  import {writable, derived} from 'svelte/store';
+  import {writable} from 'svelte/store';
 
   export function Store(data, mappings) {
     data = Array.isArray(data) ? data : [data];
@@ -58,7 +58,7 @@
   const selected        = writable(null);
   const search_criteria = writable('');
   let current_page      = 1;
-  let page              = derived(rows, $rows => $rows.slice(current_page * page_size, (current_page * page_size) + page_size));
+  let page              = $rows.slice(current_page * page_size, (current_page * page_size) + page_size);
 
   selected.subscribe(item => dispatch('select', item));
   search_criteria.subscribe(search);
@@ -88,13 +88,12 @@
   }
 
   function search(criteria) {
-
     const filtered = cache.filter(item => {
       return columns.map(header => (access(header.title, item) || '').toLowerCase()).join(' ').includes(criteria.toLowerCase());
     });
 
     rows.set(filtered);
-    move(current_page);
+    move(current_page)
   }
 
   function move(index) {
