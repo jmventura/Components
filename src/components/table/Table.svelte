@@ -32,14 +32,10 @@
 
     rows.filter = function (fn) {
       rows.reset();
-      rows.update(items => {
-        return items.filter(fn);
-      });
+      rows.update(items => items.filter(fn));
     };
 
-    rows.reset = function () {
-      rows.set(cache);
-    };
+    rows.reset = () => rows.set(cache);
 
     return {rows, columns};
   }
