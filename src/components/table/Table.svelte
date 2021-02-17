@@ -30,12 +30,8 @@
 
     rows.set(cache);
 
-    rows.filter = function (fn) {
-      rows.reset();
-      rows.update(items => items.filter(fn));
-    };
-
-    rows.reset = () => rows.set(cache);
+    rows.filter = fn => rows.set(cache.filter(fn));
+    rows.reset  = () => rows.set(cache);
 
     return {rows, columns};
   }
@@ -57,8 +53,8 @@
   const paging          = {index: 1, current: [], pages: 0};
 
   selected.subscribe(item => dispatch('select', item));
-  criteria.subscribe(() => paginate($rows));
   rows.subscribe(paginate);
+  criteria.subscribe(pattern => {if (pattern) paginate($rows);});
 
   function paginate(records) {
     if ($criteria) {
@@ -68,14 +64,13 @@
           .includes($criteria.toLowerCase()));
     }
 
-    paging.pages = Math.ceil(records.length / page_size);
-    console.log(paging);
-
     if (records.length <= page_size) {
       paging.current = records;
+      paging.pages   = 1;
     } else {
       const start    = (paging.index - 1) * page_size;
       paging.current = records.slice(start, start + 12);
+      paging.pages   = Math.ceil(records.length / page_size);
     }
 
     console.log('page', paging.index, 'of', paging.pages, '(', records.length, 'records )');
