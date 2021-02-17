@@ -9,7 +9,6 @@
     telefono: 'phone',
     email:    'email'
   };
-  const print    = item => console.log(item.detail);
   const store    = Store(contacts.filter(item => item.email), mappings);
   const filter   = name => () => store.rows.filter(item => item['nome'] === name);
 </script>
@@ -21,5 +20,5 @@
     <button class="ui button" on:click={store.rows.reset}>Reset filter</button>
   </div>
 
-  <TableView {store} headers="{true}" search="{true}" on:select={print}/>
+  <TableView {store} headers="{true}" search="{true}" on:select={item => console.log(item.detail)}/>
 </main>
