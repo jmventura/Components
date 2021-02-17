@@ -32,14 +32,10 @@
 
     rows.filter = function (fn) {
       rows.reset();
-      rows.update(items => {
-        return items.filter(fn);
-      });
+      rows.update(items => items.filter(fn));
     };
 
-    rows.reset = function () {
-      rows.set(cache);
-    };
+    rows.reset = () => rows.set(cache);
 
     return {rows, columns};
   }
@@ -61,19 +57,28 @@
   const paging          = {index: 1, current: [], pages: 0};
 
   selected.subscribe(item => dispatch('select', item));
-  criteria.subscribe(find);
+  criteria.subscribe(() => paginate($rows));
   rows.subscribe(paginate);
 
   function paginate(records) {
-    paging.pages = Math.ceil(records.length / page_size) >= 1 ? Math.ceil(records.length / page_size) : 1;
+    if ($criteria) {
+      records = $rows.filter(row => columns
+          .map(header => row[header.title].toLowerCase())
+          .join(' ')
+          .includes($criteria.toLowerCase()));
+    }
+
+    paging.pages = Math.ceil(records.length / page_size);
+    console.log(paging);
 
     if (records.length <= page_size) {
       paging.current = records;
     } else {
-      paging.current = records.slice(paging.index * page_size, (paging.index * page_size) + page_size);
+      const start    = (paging.index - 1) * page_size;
+      paging.current = records.slice(start, start + 12);
     }
 
-    console.log('page', paging.index, 'of', paging.pages - 1, '(', records.length, 'records )');
+    console.log('page', paging.index, 'of', paging.pages, '(', records.length, 'records )');
   }
 
   function sort(field) {
@@ -89,23 +94,11 @@
     sorting.icon = sorting.asc ? 'sort alphabet up icon grey' : 'sort alphabet down icon grey';
   }
 
-  function find(patter) {
-    if (!patter) return;
-
-    const filtered = cache.filter(row => columns
-        .map(header => row[header.title].toLowerCase())
-        .join(' ')
-        .includes(patter.toLowerCase()));
-
-    rows.set(filtered);
-  }
-
   function move(to) {
-    if (to < 1 || to >= paging.pages) return;
+    if (to < 1 || to > paging.pages) return;
     paging.index = to;
     paginate($rows);
   }
-
 </script>
 
 <div class="ui basic segment">
