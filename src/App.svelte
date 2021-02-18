@@ -13,9 +13,7 @@
       email:    contact.email
     };
   }));
-  const filter  = name => () => {
-    store.filter(item => item.nome === name);
-  };
+  const filter  = name => () => store.filter(item => item.nome === name);
 </script>
 
 <main>

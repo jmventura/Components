@@ -1,30 +1,28 @@
 import {writable, get} from 'svelte/store';
 
 export default function Store(records) {
-  let cache = records;
-  const f   = writable(null);
+  let cache             = records;
+  const store           = writable(cache);
+  const filter_criteria = writable(null);
+  const search_criteria = writable('');
 
-  const store    = writable(cache);
-  const criteria = writable('');
+  search_criteria.subscribe(pattern => {
+    if (pattern) return apply(get(filter_criteria));
 
-  criteria.subscribe(pattern => {
-    if (pattern) return apply(get(f));
-
-    if (get(f)) {
-      store.set(cache.filter(get(f)));
+    if (get(filter_criteria)) {
+      store.set(cache.filter(get(filter_criteria)));
     } else {
       store.set(cache);
     }
   });
 
-  f.subscribe(apply);
+  filter_criteria.subscribe(apply);
 
   function reset(records) {
     if (records) cache = records;
 
-    store.set(cache);
-    criteria.set('');
-    f.set(null);
+    search_criteria.set('');
+    filter_criteria.set(null);
   }
 
   function apply(filter) {
@@ -36,15 +34,15 @@ export default function Store(records) {
   }
 
   function filter(fn) {
-    f.set(fn);
+    filter_criteria.set(fn);
   }
 
   function search(item) {
     const values = Object.keys(item).filter(key => key !== 'id').map(key => item[key]);
     const string = values.map(value => value.toLowerCase()).join(' ');
 
-    return string.includes(get(criteria).toLowerCase());
+    return string.includes(get(search_criteria).toLowerCase());
   }
 
-  return {...store, reset, filter, criteria};
+  return {...store, reset, filter, criteria: search_criteria};
 }
