@@ -44,36 +44,39 @@
   export let headers = false;
   export let search  = false;
 
-  const page_size       = 12;
   const {rows, columns} = store;
   const dispatch        = createEventDispatcher();
   const selected        = writable(null);
   const criteria        = writable('');
   const sorting         = {asc: false, key: null, icon: ''};
-  const paging          = {index: 1, current: [], pages: 0};
+  const paging          = {index: 1, current: [], pages: 0, size: 12};
 
   selected.subscribe(item => dispatch('select', item));
   rows.subscribe(paginate);
-  criteria.subscribe(pattern => {if (pattern) paginate($rows);});
+  criteria.subscribe(find);
+
+  $: console.log(`page ${paging.index} of ${paging.pages} (${$rows.length} records)`);
+
+  function find(pattern) {
+    if (!pattern) {
+      rows.set(cache);
+    } else {
+      rows.set(cache.filter(row => columns
+          .map(column => row[column.title].toLowerCase())
+          .join(' ')
+          .includes(paginate().toLowerCase())));
+    }
+  }
 
   function paginate(records) {
-    if ($criteria) {
-      records = $rows.filter(row => columns
-          .map(header => row[header.title].toLowerCase())
-          .join(' ')
-          .includes($criteria.toLowerCase()));
-    }
-
-    if (records.length <= page_size) {
+    if (records.length <= paging.size) {
       paging.current = records;
       paging.pages   = 1;
     } else {
-      const start    = (paging.index - 1) * page_size;
+      const start    = (paging.index - 1) * paging.size;
       paging.current = records.slice(start, start + 12);
-      paging.pages   = Math.ceil(records.length / page_size);
+      paging.pages   = Math.ceil(records.length / paging.size);
     }
-
-    console.log('page', paging.index, 'of', paging.pages, '(', records.length, 'records )');
   }
 
   function sort(field) {
@@ -89,9 +92,9 @@
     sorting.icon = sorting.asc ? 'sort alphabet up icon grey' : 'sort alphabet down icon grey';
   }
 
-  function move(to) {
-    if (to < 1 || to > paging.pages) return;
-    paging.index = to;
+  function move(index) {
+    if (index < 1 || index > paging.pages) return;
+    paging.index = index;
     paginate($rows);
   }
 </script>
@@ -106,9 +109,7 @@
         <th colspan="{columns.length - 1}">
           <div class="ui form">
             <div class="ui fluid icon input">
-              <label>
-                <input type="text" placeholder="Cerca..." bind:value={$criteria}>
-              </label>
+              <input type="text" placeholder="Cerca..." bind:value={$criteria}>
               <i class="search icon"></i>
             </div>
           </div>
