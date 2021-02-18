@@ -49,7 +49,7 @@
   const selected        = writable(null);
   const criteria        = writable('');
   const sorting         = {asc: false, key: null, icon: ''};
-  const paging          = {index: 1, current: [], pages: 0};
+  const paging          = {index: 1, current: [], pages: 0, size: 12};
 
   selected.subscribe(item => dispatch('select', item));
   rows.subscribe(paginate);
@@ -69,20 +69,13 @@
   }
 
   function paginate(records) {
-    if ($criteria) {
-      records = $rows.filter(row => columns
-          .map(header => row[header.title].toLowerCase())
-          .join(' ')
-          .includes($criteria.toLowerCase()));
-    }
-
-    if (records.length <= page_size) {
+    if (records.length <= paging.size) {
       paging.current = records;
       paging.pages   = 1;
     } else {
-      const start    = (paging.index - 1) * page_size;
+      const start    = (paging.index - 1) * paging.size;
       paging.current = records.slice(start, start + 12);
-      paging.pages   = Math.ceil(records.length / page_size);
+      paging.pages   = Math.ceil(records.length / paging.size);
     }
   }
 
