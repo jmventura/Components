@@ -47,29 +47,43 @@
   const {rows, columns} = store;
   const dispatch        = createEventDispatcher();
   const selected        = writable(null);
-  const sorting         = {asc: false, key: null, icon: ''};
-  const paging          = {index: 1, current: [], pages: 0, size: 12};
   const criteria        = writable('');
+  const sorting         = {asc: false, key: null, icon: ''};
+  const paging          = {index: 1, current: [], pages: 0};
 
   selected.subscribe(item => dispatch('select', item));
   rows.subscribe(paginate);
-  criteria.subscribe(pattern => paginate($rows, pattern));
+  criteria.subscribe(find);
 
-  function paginate(records, pattern) {
-    if (pattern) records = records.filter(record => {
-      return Object.values(record).map(value => value.toLowerCase()).join(' ').includes(pattern.toLowerCase());
-    });
+  $: console.log(`page ${paging.index} of ${paging.pages} (${$rows.length} records)`);
 
-    if (records.length <= paging.size) {
+  function find(pattern) {
+    if (!pattern) {
+      rows.set(cache);
+    } else {
+      rows.set(cache.filter(row => columns
+          .map(column => row[column.title].toLowerCase())
+          .join(' ')
+          .includes(paginate().toLowerCase())));
+    }
+  }
+
+  function paginate(records) {
+    if ($criteria) {
+      records = $rows.filter(row => columns
+          .map(header => row[header.title].toLowerCase())
+          .join(' ')
+          .includes($criteria.toLowerCase()));
+    }
+
+    if (records.length <= page_size) {
       paging.current = records;
       paging.pages   = 1;
     } else {
-      const start    = (paging.index - 1) * paging.size;
-      paging.current = records.slice(start, start + paging.size);
-      paging.pages   = Math.ceil(records.length / paging.size);
+      const start    = (paging.index - 1) * page_size;
+      paging.current = records.slice(start, start + 12);
+      paging.pages   = Math.ceil(records.length / page_size);
     }
-
-    console.log('page', paging.index, 'of', paging.pages, '(', records.length, 'records )');
   }
 
   function sort(field) {
@@ -135,48 +149,50 @@
 
     <!-- BODY -->
     <tbody>
-    {#if paging.current.length}
-      {#each paging.current as item, i}
-        <tr class={item.id === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
-          {#each columns as header, i}
-            {#if (header.key !== 'id')}
-              <td class:sorted={sorting.key === header.title}>
-                {item[header.title]}
-              </td>
-            {/if}
-          {/each}
-        </tr>
-      {/each}
-    {:else}
-      {#each Array(paging.size) as item}
-        <tr>
-          {#each Array(columns.length - 1) as header}
-            <td>
-              <div class="ui placeholder">
-                <div class="line"></div>
-              </div>
+    <!--{#if pages.items.length}-->
+    {#each paging.current as item, i}
+      <!--{#each pages.current as item}-->
+      <tr class={item.id === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
+        {#each columns as header, i}
+          {#if (header.key !== 'id')}
+            <td class:sorted={sorting.key === header.title}>
+              {item[header.title]}
             </td>
-          {/each}
-        </tr>
-      {/each}
-    {/if}
+          {/if}
+        {/each}
+      </tr>
+
+    {/each}
+    <!--{:else}-->
+    <!--  {#each Array(pages.size) as item}-->
+    <!--    <tr>-->
+    <!--      {#each columns as header}-->
+    <!--        <td>-->
+    <!--          <div class="ui placeholder">-->
+    <!--            <div class="line"></div>-->
+    <!--          </div>-->
+    <!--        </td>-->
+    <!--      {/each}-->
+    <!--    </tr>-->
+    <!--  {/each}-->
+    <!--{/if}-->
     </tbody>
 
     <!-- FOOTER -->
     <tfoot>
     <tr>
       <th colspan="1">
-        {#if $rows.length}
-          <div class="ui left aligned container">
-            {$rows.length} registri di {cache.length}
+        <!--{#if pages.items.length}-->
+        <!--  <div class="ui left aligned container">-->
+        <!--    &lt;!&ndash;{pages.items.flat().length} registri di {$rows.flat().length}&ndash;&gt;-->
+        <!--  </div>-->
+        <!--{:else}-->
+        <div class="ui placeholder">
+          <div class="header">
+            <div class="full line"></div>
           </div>
-        {:else}
-          <div class="ui placeholder">
-            <div class="header">
-              <div class="full line"></div>
-            </div>
-          </div>
-        {/if}
+        </div>
+        <!--{/if}-->
       </th>
       <th colspan="{columns.length - 3}">
         <div class="ui center aligned container">
@@ -186,6 +202,23 @@
               <i class="left chevron icon"></i>
             </a>
 
+            <!--{#if pager.start > 0}-->
+            <!--<a class="icon item" on:click={()=>move(-1)}>-->
+            <!--  ...-->
+            <!--</a>-->
+            <!--{/if}-->
+
+            <!--{#each pager.items as pagination}-->
+            <!--  <a class:active={pager.current === pagination} class="item" on:click={()=>move(1)}>-->
+            <!--  </a>-->
+            <!--{/each}-->
+
+            <!--{#if pager.end < pages.items.length - 1}-->
+            <!--<a class="icon item" on:click={()=>move(1)}>-->
+            <!--  ...-->
+            <!--</a>-->
+            <!--{/if}-->
+
             <a class="icon item" on:click={()=>move(paging.index + 1)}>
               <i class="right chevron icon"></i>
             </a>
@@ -194,17 +227,17 @@
         </div>
       </th>
       <th colspan="1">
-        {#if paging.current.length}
-          <div class="ui right aligned container">
-            pagina {paging.index} di {paging.pages}
+        <!--{#if pages.items.length}-->
+        <!--  <div class="ui right aligned container">-->
+        <!--    pagina {pager.current + 1} di {pages.items.length}-->
+        <!--  </div>-->
+        <!--{:else}-->
+        <div class="ui placeholder">
+          <div class="header">
+            <div class="full line"></div>
           </div>
-        {:else}
-          <div class="ui placeholder">
-            <div class="header">
-              <div class="full line"></div>
-            </div>
-          </div>
-        {/if}
+        </div>
+        <!--{/if}-->
       </th>
     </tr>
     </tfoot>
