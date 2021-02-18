@@ -21,7 +21,6 @@ export default function Store(records) {
   function reset(records) {
     if (records) cache = records;
 
-    search_criteria.set('');
     filter_criteria.set(null);
   }
 
