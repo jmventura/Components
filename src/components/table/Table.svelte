@@ -1,72 +1,20 @@
-<script context="module">
-  import {writable} from 'svelte/store';
-
-  const cache = [];
-
-  export function Store(data, mappings) {
-    data = Array.isArray(data) ? data : [data];
-    if (!('id' in mappings)) throw Error('an "id" field must be defined');
-
-    const rows    = writable([]);
-    const columns = [];
-
-    function access(path, o) {
-      return path.replace(/\[|]\.?/g, '.').split('.').reduce((a, v) => a && a[v], o);
-    }
-
-    for (const mapping in mappings) if (mappings.hasOwnProperty(mapping)) {
-      columns.push({key: mappings[mapping], title: mapping});
-    }
-
-    for (const record of data) {
-      const row = {};
-
-      for (const mapping in mappings) if (mappings.hasOwnProperty(mapping)) {
-        row[mapping] = access(mappings[mapping], record);
-      }
-
-      cache.push(row);
-    }
-
-    rows.set(cache);
-
-    rows.filter = fn => rows.set(cache.filter(fn));
-    rows.reset  = () => rows.set(cache);
-
-    return {rows, columns};
-  }
-</script>
-
 <script>
   import {createEventDispatcher} from 'svelte';
+  import {writable} from 'svelte/store';
 
-  export let store   = Store({}, {});
-  export let headers = false;
-  export let search  = false;
+  export let headers = [];
+  export let store;
 
-  const {rows, columns} = store;
-  const dispatch        = createEventDispatcher();
-  const selected        = writable(null);
-  const criteria        = writable('');
-  const sorting         = {asc: false, key: null, icon: ''};
-  const paging          = {index: 1, current: [], pages: 0, size: 12};
+  const selected   = writable(null);
+  const dispatch   = createEventDispatcher();
+  const sorting    = {asc: false, key: null, icon: ''};
+  const paging     = {index: 1, current: [], pages: 0, size: 12};
+  const {criteria} = store;
 
   selected.subscribe(item => dispatch('select', item));
-  rows.subscribe(paginate);
-  criteria.subscribe(find);
+  store.subscribe(paginate);
 
-  $: console.log(`page ${paging.index} of ${paging.pages} (${$rows.length} records)`);
-
-  function find(pattern) {
-    if (!pattern) {
-      rows.set(cache);
-    } else {
-      rows.set(cache.filter(row => columns
-          .map(column => row[column.title].toLowerCase())
-          .join(' ')
-          .includes(paginate().toLowerCase())));
-    }
-  }
+  $: console.log(`page ${paging.index} of ${paging.pages} (${$store.length} records)`);
 
   function paginate(records) {
     if (records.length <= paging.size) {
@@ -80,7 +28,7 @@
   }
 
   function sort(field) {
-    rows.update(values => values.sort(function (a, b) {
+    store.update(values => values.sort(function (a, b) {
       a = a[field].toLowerCase();
       b = b[field].toLowerCase();
 
@@ -95,7 +43,7 @@
   function move(index) {
     if (index < 1 || index > paging.pages) return;
     paging.index = index;
-    paginate($rows);
+    paginate($store);
   }
 </script>
 
@@ -104,37 +52,33 @@
     <thead>
 
     <!-- SEARCH-->
-    {#if (search)}
-      <tr>
-        <th colspan="{columns.length - 1}">
-          <div class="ui form">
-            <div class="ui fluid icon input">
-              <input type="text" placeholder="Cerca..." bind:value={$criteria}>
-              <i class="search icon"></i>
-            </div>
+    <tr>
+      <th colspan="{headers.length}">
+        <div class="ui form">
+          <div class="ui fluid icon input">
+            <input type="text" placeholder="Cerca..." bind:value={$criteria}>
+            <i class="search icon"></i>
           </div>
-        </th>
-      </tr>
-    {/if}
+        </div>
+      </th>
+    </tr>
 
     <!-- HEADERS-->
     {#if headers}
       <tr>
-        {#each columns as header}
-          {#if (header.key !== 'id')}
-            <th class="sticky four wide" on:click={()=> sort(header.title)}>
-              <div class="ui items">
-                <div class="item">
-                  <div class="ui left aligned content">
-                    {header.title.toUpperCase()}
-                  </div>
-                  <div class="ui right aligned content">
-                    <i class="{header.title === sorting.key ? sorting.icon: ''}"></i>
-                  </div>
+        {#each headers as header}
+          <th class="sticky four wide" on:click={()=> sort(header)}>
+            <div class="ui items">
+              <div class="item">
+                <div class="ui left aligned content">
+                  {header.toUpperCase()}
+                </div>
+                <div class="ui right aligned content">
+                  <i class="{header === sorting.key ? sorting.icon: ''}"></i>
                 </div>
               </div>
-            </th>
-          {/if}
+            </div>
+          </th>
         {/each}
       </tr>
     {/if}
@@ -142,33 +86,31 @@
 
     <!-- BODY -->
     <tbody>
-    <!--{#if pages.items.length}-->
-    {#each paging.current as item, i}
-      <!--{#each pages.current as item}-->
-      <tr class={item.id === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
-        {#each columns as header, i}
-          {#if (header.key !== 'id')}
-            <td class:sorted={sorting.key === header.title}>
-              {item[header.title]}
+    {#if paging.current.length}
+      {#each paging.current as item, i}
+        <tr class={item.id === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
+          {#each headers as header}
+            {#if (header !== 'id')}
+              <td class:sorted={sorting.key === header}>
+                {item[header]}
+              </td>
+            {/if}
+          {/each}
+        </tr>
+      {/each}
+    {:else}
+      {#each Array(paging.size) as item}
+        <tr>
+          {#each headers as header}
+            <td>
+              <div class="ui placeholder">
+                <div class="line"></div>
+              </div>
             </td>
-          {/if}
-        {/each}
-      </tr>
-
-    {/each}
-    <!--{:else}-->
-    <!--  {#each Array(pages.size) as item}-->
-    <!--    <tr>-->
-    <!--      {#each columns as header}-->
-    <!--        <td>-->
-    <!--          <div class="ui placeholder">-->
-    <!--            <div class="line"></div>-->
-    <!--          </div>-->
-    <!--        </td>-->
-    <!--      {/each}-->
-    <!--    </tr>-->
-    <!--  {/each}-->
-    <!--{/if}-->
+          {/each}
+        </tr>
+      {/each}
+    {/if}
     </tbody>
 
     <!-- FOOTER -->
@@ -187,7 +129,7 @@
         </div>
         <!--{/if}-->
       </th>
-      <th colspan="{columns.length - 3}">
+      <th colspan="{headers.length - 2}">
         <div class="ui center aligned container">
           <div class="ui pagination menu">
 
