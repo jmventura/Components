@@ -9,7 +9,7 @@
   const selected   = writable(null);
   const dispatch   = createEventDispatcher();
   const sorting    = {asc: false, key: null, icon: ''};
-  const paging     = {index: 1, current: [], pages: 0, size: 12};
+  const paging     = {index: 1, current: [], pages: 0, size: 12, boundaries: []};
   const {criteria} = store;
 
   selected.subscribe(item => dispatch('select', item));
@@ -28,8 +28,11 @@
       }
 
       const start    = (paging.index - 1) * paging.size;
-      paging.current = records.slice(start, start + 12);
+      paging.current = records.slice(start, start + paging.size);
     }
+
+    paging.boundaries[0] = (paging.index - 1) * paging.size;
+    paging.boundaries[1] = paging.index === paging.size ? $store.length : paging.boundaries[0] + paging.current.length;
   }
 
   function sort(field) {
@@ -123,11 +126,16 @@
     <!-- FOOTER -->
     <tfoot>
     <tr>
-      <th colspan="{headers.length}">
+      <th colspan="{1}">
+        <div class="ui left aligned container">
+          {paging.boundaries[0]} -  {paging.boundaries[1]}
+        </div>
+      </th>
+      <th colspan="{headers.length - 2}">
         <div class="ui center aligned container">
           <div class="ui pagination menu">
 
-            <a class="icon item" on:click={()=>move(paging.index - 1)}>
+            <a class="icon item" on:click={() => move(paging.index - 1)}>
               <i class="left chevron icon"></i>
             </a>
 
@@ -138,8 +146,12 @@
             <a class="icon item" on:click={()=>move(paging.index + 1)}>
               <i class="right chevron icon"></i>
             </a>
-
           </div>
+        </div>
+      </th>
+      <th colspan="{1}">
+        <div class="ui right aligned container">
+          {$store.length}
         </div>
       </th>
     </tr>
