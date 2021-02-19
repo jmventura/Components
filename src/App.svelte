@@ -14,14 +14,16 @@
     };
   }));
   const filter  = name => () => store.filter(item => item.nome === name);
+  const options = {show_search: true, show_headers: true};
 </script>
 
 <main>
   <div class="ui basic segment">
     <button class="ui button" on:click={filter('Franco')}>Filter by Name = Franco</button>
     <button class="ui button" on:click={filter('Roberto')}>Filter by Name = Roberto</button>
+    <button class="ui button" on:click={filter('Stefano')}>Filter by Name = Stefano</button>
     <button class="ui button" on:click={()=>store.reset()}>Reset filter</button>
   </div>
 
-  <Table {store} {headers} on:select={item => console.log(item.detail)}/>
+  <Table {store} {headers} {options} on:select={item => console.log(item.detail)}/>
 </main>

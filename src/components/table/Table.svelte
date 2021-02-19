@@ -4,6 +4,7 @@
 
   export let headers = [];
   export let store;
+  export let options = {show_headers: true, show_search: true};
 
   const selected   = writable(null);
   const dispatch   = createEventDispatcher();
@@ -14,16 +15,20 @@
   selected.subscribe(item => dispatch('select', item));
   store.subscribe(paginate);
 
-  $: console.log(`page ${paging.index} of ${paging.pages} (${$store.length} records)`);
-
   function paginate(records) {
     if (records.length <= paging.size) {
       paging.current = records;
       paging.pages   = 1;
+      paging.index   = 1;
     } else {
+      paging.pages = Math.ceil(records.length / paging.size);
+
+      if (paging.index > paging.pages) {
+        paging.index = paging.pages;
+      }
+
       const start    = (paging.index - 1) * paging.size;
       paging.current = records.slice(start, start + 12);
-      paging.pages   = Math.ceil(records.length / paging.size);
     }
   }
 
@@ -52,19 +57,21 @@
     <thead>
 
     <!-- SEARCH-->
-    <tr>
-      <th colspan="{headers.length}">
-        <div class="ui form">
-          <div class="ui fluid icon input">
-            <input type="text" placeholder="Cerca..." bind:value={$criteria}>
-            <i class="search icon"></i>
+    {#if options.show_search}
+      <tr>
+        <th colspan="{headers.length}">
+          <div class="ui form">
+            <div class="ui fluid icon input">
+              <input type="text" placeholder="Cerca..." bind:value={$criteria}>
+              <i class="search icon"></i>
+            </div>
           </div>
-        </div>
-      </th>
-    </tr>
+        </th>
+      </tr>
+    {/if}
 
     <!-- HEADERS-->
-    {#if headers}
+    {#if options.show_headers}
       <tr>
         {#each headers as header}
           <th class="sticky four wide" on:click={()=> sort(header)}>
@@ -87,8 +94,8 @@
     <!-- BODY -->
     <tbody>
     {#if paging.current.length}
-      {#each paging.current as item, i}
-        <tr class={item.id === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
+      {#each paging.current as item (item.id)}
+        <tr class={item === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
           {#each headers as header}
             {#if (header !== 'id')}
               <td class:sorted={sorting.key === header}>
@@ -116,20 +123,7 @@
     <!-- FOOTER -->
     <tfoot>
     <tr>
-      <th colspan="1">
-        <!--{#if pages.items.length}-->
-        <!--  <div class="ui left aligned container">-->
-        <!--    &lt;!&ndash;{pages.items.flat().length} registri di {$rows.flat().length}&ndash;&gt;-->
-        <!--  </div>-->
-        <!--{:else}-->
-        <div class="ui placeholder">
-          <div class="header">
-            <div class="full line"></div>
-          </div>
-        </div>
-        <!--{/if}-->
-      </th>
-      <th colspan="{headers.length - 2}">
+      <th colspan="{headers.length}">
         <div class="ui center aligned container">
           <div class="ui pagination menu">
 
@@ -137,22 +131,9 @@
               <i class="left chevron icon"></i>
             </a>
 
-            <!--{#if pager.start > 0}-->
-            <!--<a class="icon item" on:click={()=>move(-1)}>-->
-            <!--  ...-->
-            <!--</a>-->
-            <!--{/if}-->
-
-            <!--{#each pager.items as pagination}-->
-            <!--  <a class:active={pager.current === pagination} class="item" on:click={()=>move(1)}>-->
-            <!--  </a>-->
-            <!--{/each}-->
-
-            <!--{#if pager.end < pages.items.length - 1}-->
-            <!--<a class="icon item" on:click={()=>move(1)}>-->
-            <!--  ...-->
-            <!--</a>-->
-            <!--{/if}-->
+            <div class="item">
+              {paging.index} di {paging.pages}
+            </div>
 
             <a class="icon item" on:click={()=>move(paging.index + 1)}>
               <i class="right chevron icon"></i>
@@ -160,19 +141,6 @@
 
           </div>
         </div>
-      </th>
-      <th colspan="1">
-        <!--{#if pages.items.length}-->
-        <!--  <div class="ui right aligned container">-->
-        <!--    pagina {pager.current + 1} di {pages.items.length}-->
-        <!--  </div>-->
-        <!--{:else}-->
-        <div class="ui placeholder">
-          <div class="header">
-            <div class="full line"></div>
-          </div>
-        </div>
-        <!--{/if}-->
       </th>
     </tr>
     </tfoot>
