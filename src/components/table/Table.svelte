@@ -81,120 +81,116 @@
   }
 </script>
 
-<div class="ui basic segment">
-  <table class="ui fixed single line selectable table">
-    <thead>
-
-    <!-- SEARCH-->
-    {#if options.show_search}
-      <tr>
-        <th colspan="{headers.length}">
-          <div class="ui form">
-            <div class="ui fluid icon input">
-              <input type="text" placeholder="Cerca..." bind:value={$criteria}>
-              <i class="search icon"></i>
-            </div>
+<table class="ui fixed single line selectable table">
+  <thead>
+  <!-- SEARCH-->
+  {#if options.show_search}
+    <tr>
+      <th colspan="{headers.length}">
+        <div class="ui form">
+          <div class="ui fluid icon input">
+            <input type="text" placeholder="Cerca..." bind:value={$criteria}>
+            <i class="search icon"></i>
           </div>
-        </th>
-      </tr>
-    {/if}
+        </div>
+      </th>
+    </tr>
+  {/if}
 
-    <!-- HEADERS-->
-    {#if options.show_headers}
-      <tr>
-        {#each headers as header}
-          <th class="sticky four wide" on:click={()=> sort(header[0])}>
-            <div class="ui items">
-              <div class="item">
-                <div class="ui left aligned content">
-                  {header[1].toUpperCase()}
-                </div>
-                <div class="ui right aligned content">
-                  <i class="{header === sorting.key ? sorting.icon: ''}"></i>
-                </div>
+  <!-- HEADERS-->
+  {#if options.show_headers}
+    <tr>
+      {#each headers as header}
+        <th class="sticky four wide" on:click={()=> sort(header[0])}>
+          <div class="ui items">
+            <div class="item">
+              <div class="ui left aligned content">
+                {header[1].toUpperCase()}
+              </div>
+              <div class="ui right aligned content">
+                <i class="{header === sorting.key ? sorting.icon: ''}"></i>
               </div>
             </div>
-          </th>
-        {/each}
-      </tr>
-    {/if}
-    </thead>
-
-    <!-- BODY -->
-    <tbody>
-    {#each paging.current as item}
-      <tr class:selected={$selected === item} class="{marker(item)}" on:click={() => selected.set(item)}>
-        {#each headers as header, i}
-          {#if (header !== 'id')}
-            <td class:sorted={sorting.key === header}>{@html icon(i, item)} {item[header[0]]} </td>
-          {/if}
-        {/each}
-      </tr>
-    {/each}
-
-    <!--fill with empty rows-->
-    {#each Array(paging.size - paging.current.length) as item}
-      <tr>
-        {#each headers as header}
-          {#if (header !== 'id')}
-            <td class:sorted={sorting.key === header}>&zwnj;</td>
-          {/if}
-        {/each}
-      </tr>
-    {/each}
-    </tbody>
-
-    <!-- FOOTER -->
-    {#if options.show_footer}
-      <tfoot>
-      <tr>
-        <th colspan="{1}">
-          <div class="ui left aligned container">
-            {paging.boundaries[0] + 1} -  {paging.boundaries[1]}
           </div>
         </th>
-        <th colspan="{headers.length - 2}">
-          <div class="ui center aligned container">
-            <div class="ui pagination menu">
+      {/each}
+    </tr>
+  {/if}
+  </thead>
 
-              {#if paging.index === 1}
-                <a class="icon item disabled">
-                  <i class="left chevron icon"></i>
-                </a>
-              {:else }
-                <a class="icon item" on:click={() => move(paging.index - 1)}>
-                  <i class="left chevron icon"></i>
-                </a>
-              {/if}
+  <!-- BODY -->
+  <tbody>
+  {#each paging.current as item}
+    <tr class:selected={$selected === item} class="{marker(item)}" on:click={() => selected.set(item)}>
+      {#each headers as header, i}
+        {#if (header !== 'id')}
+          <td class:sorted={sorting.key === header}>{@html icon(i, item)} {item[header[0]]} </td>
+        {/if}
+      {/each}
+    </tr>
+  {/each}
 
-              <div class="item">
-                {paging.index} di {paging.pages}
-              </div>
+  <!--fill with empty rows-->
+  {#each Array(paging.size - paging.current.length) as item}
+    <tr>
+      {#each headers as header}
+        {#if (header !== 'id')}
+          <td class:sorted={sorting.key === header}>&zwnj;</td>
+        {/if}
+      {/each}
+    </tr>
+  {/each}
+  </tbody>
 
-              {#if paging.index === paging.pages}
-                <a class="icon item disabled">
-                  <i class="right chevron icon"></i>
-                </a>
-              {:else }
-                <a class="icon item" on:click={()=>move(paging.index + 1)}>
-                  <i class="right chevron icon"></i>
-                </a>
-              {/if}
+  <!-- FOOTER -->
+  {#if options.show_footer}
+    <tfoot>
+    <tr>
+      <th colspan="{1}">
+        <div class="ui left aligned container">
+          {paging.boundaries[0] + 1} -  {paging.boundaries[1]}
+        </div>
+      </th>
+      <th colspan="{headers.length - 2}">
+        <div class="ui center aligned container">
+          <div class="ui pagination menu">
 
+            {#if paging.index === 1}
+              <a class="icon item disabled">
+                <i class="left chevron icon"></i>
+              </a>
+            {:else }
+              <a class="icon item" on:click={() => move(paging.index - 1)}>
+                <i class="left chevron icon"></i>
+              </a>
+            {/if}
+
+            <div class="item">
+              {paging.index} di {paging.pages}
             </div>
-          </div>
-        </th>
-        <th colspan="{1}">
-          <div class="ui right aligned container">
-            {$store.length}
-          </div>
-        </th>
-      </tr>
-      </tfoot>
-    {/if}
-  </table>
 
-</div>
+            {#if paging.index === paging.pages}
+              <a class="icon item disabled">
+                <i class="right chevron icon"></i>
+              </a>
+            {:else }
+              <a class="icon item" on:click={()=>move(paging.index + 1)}>
+                <i class="right chevron icon"></i>
+              </a>
+            {/if}
+
+          </div>
+        </div>
+      </th>
+      <th colspan="{1}">
+        <div class="ui right aligned container">
+          {$store.length}
+        </div>
+      </th>
+    </tr>
+    </tfoot>
+  {/if}
+</table>
 
 <style>
     .ui.segment {
