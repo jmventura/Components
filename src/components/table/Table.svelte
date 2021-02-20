@@ -133,17 +133,30 @@
           <div class="ui center aligned container">
             <div class="ui pagination menu">
 
-              <a class="icon item" on:click={() => move(paging.index - 1)}>
-                <i class="left chevron icon"></i>
-              </a>
+              {#if paging.index === 1}
+                <a class="icon item disabled">
+                  <i class="left chevron icon"></i>
+                </a>
+              {:else }
+                <a class="icon item" on:click={() => move(paging.index - 1)}>
+                  <i class="left chevron icon"></i>
+                </a>
+              {/if}
 
               <div class="item">
                 {paging.index} di {paging.pages}
               </div>
 
-              <a class="icon item" on:click={()=>move(paging.index + 1)}>
-                <i class="right chevron icon"></i>
-              </a>
+              {#if paging.index === paging.pages}
+                <a class="icon item disabled">
+                  <i class="right chevron icon"></i>
+                </a>
+              {:else }
+                <a class="icon item" on:click={()=>move(paging.index + 1)}>
+                  <i class="right chevron icon"></i>
+                </a>
+              {/if}
+
             </div>
           </div>
         </th>
