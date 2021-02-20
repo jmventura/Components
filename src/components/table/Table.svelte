@@ -13,13 +13,14 @@
     marker:       row => row
   };
 
-  const headers    = Object.entries(options.columns);
-  const selected   = writable(null);
-  const dispatch   = createEventDispatcher();
-  const sorting    = {asc: false, key: null, icon: ''};
-  const paging     = {index: 1, current: [], pages: 0, size: 12, boundaries: []};
-  const {criteria} = store;
+  const headers  = Object.entries(options.columns);
+  const selected = writable(null);
+  const dispatch = createEventDispatcher();
+  const sorting  = {asc: false, key: null, icon: ''};
+  const paging   = {index: 1, current: [], pages: 0, size: 12, boundaries: []};
+  const criteria = writable('');
 
+  criteria.subscribe(store.search);
   selected.subscribe(item => dispatch('select', item));
   store.subscribe(paginate);
 
@@ -152,31 +153,23 @@
       </th>
       <th colspan="{headers.length - 2}">
         <div class="ui center aligned container">
-          <div class="ui pagination menu">
+          <div class="ui buttons">
 
-            {#if paging.index === 1}
-              <a class="icon item disabled">
-                <i class="left chevron icon"></i>
-              </a>
-            {:else }
-              <a class="icon item" on:click={() => move(paging.index - 1)}>
-                <i class="left chevron icon"></i>
-              </a>
-            {/if}
+            <button
+                class="ui tertiary button"
+                class:disabled={paging.index === 1}
+                on:click={() => move(paging.index - 1)}> ⟨
+            </button>
 
-            <div class="item">
+            <button class="ui tertiary button" on:click={() => move(1)}>
               {paging.index} di {paging.pages}
-            </div>
+            </button>
 
-            {#if paging.index === paging.pages}
-              <a class="icon item disabled">
-                <i class="right chevron icon"></i>
-              </a>
-            {:else }
-              <a class="icon item" on:click={()=>move(paging.index + 1)}>
-                <i class="right chevron icon"></i>
-              </a>
-            {/if}
+            <button
+                class="ui tertiary button"
+                class:disabled={paging.index === paging.pages}
+                on:click={()=>move(paging.index + 1)}> ⟩
+            </button>
 
           </div>
         </div>
