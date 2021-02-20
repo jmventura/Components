@@ -51,8 +51,8 @@
     return '';
   }
 
-  function icon(item) {
-    if (options.icon && typeof options.icon === 'function') {
+  function icon(i, item) {
+    if (i === 0 && options.icon && typeof options.icon === 'function') {
       const icon = options.icon(item);
 
       return icon ? `<i class="${icon} icon"></i>` : '';
@@ -126,7 +126,7 @@
       <tr class:selected={$selected === item} class="{marker(item)}" on:click={() => selected.set(item)}>
         {#each headers as header, i}
           {#if (header !== 'id')}
-            <td class:sorted={sorting.key === header}>{@html icon(item)} {item[header[0]]} </td>
+            <td class:sorted={sorting.key === header}>{@html icon(i, item)} {item[header[0]]} </td>
           {/if}
         {/each}
       </tr>
