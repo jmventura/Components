@@ -14,7 +14,7 @@
     };
   }));
   const filter  = name => () => store.filter(item => item.nome === name);
-  const options = {show_search: false, show_headers: true};
+  const options = {show_search: true, show_headers: true, show_footer: true};
 </script>
 
 <main>

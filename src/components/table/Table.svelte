@@ -4,7 +4,7 @@
 
   export let headers = [];
   export let store;
-  export let options = {show_headers: true, show_search: true};
+  export let options = {show_headers: true, show_search: true, show_footer: true};
 
   const selected   = writable(null);
   const dispatch   = createEventDispatcher();
@@ -96,75 +96,65 @@
 
     <!-- BODY -->
     <tbody>
-    {#if paging.current.length}
-      {#each paging.current as item (item.id)}
-        <tr class={item === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
-          {#each headers as header}
-            {#if (header !== 'id')}
-              <td class:sorted={sorting.key === header}>
-                {item[header]}
-              </td>
-            {/if}
-          {/each}
-        </tr>
-      {/each}
-      {#each Array(paging.size - paging.current.length) as item}
-        <tr>
-          {#each headers as header}
-            {#if (header !== 'id')}
-              <td class:sorted={sorting.key === header}>&zwnj;</td>
-            {/if}
-          {/each}
-        </tr>
-      {/each}
-    {:else}
-      {#each Array(paging.size) as item}
-        <tr>
-          {#each headers as header}
-            <td>
-              <div class="ui placeholder">
-                <div class="line"></div>
-              </div>
+    {#each paging.current as item}
+      <tr class={item === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
+        {#each headers as header}
+          {#if (header !== 'id')}
+            <td class:sorted={sorting.key === header}>
+              {item[header]}
             </td>
-          {/each}
-        </tr>
-      {/each}
-    {/if}
+          {/if}
+        {/each}
+      </tr>
+    {/each}
+
+    <!--fill with empty rows-->
+    {#each Array(paging.size - paging.current.length) as item}
+      <tr>
+        {#each headers as header}
+          {#if (header !== 'id')}
+            <td class:sorted={sorting.key === header}>&zwnj;</td>
+          {/if}
+        {/each}
+      </tr>
+    {/each}
     </tbody>
 
     <!-- FOOTER -->
-    <tfoot>
-    <tr>
-      <th colspan="{1}">
-        <div class="ui left aligned container">
-          {paging.boundaries[0] + 1} -  {paging.boundaries[1]}
-        </div>
-      </th>
-      <th colspan="{headers.length - 2}">
-        <div class="ui center aligned container">
-          <div class="ui pagination menu">
-
-            <a class="icon item" on:click={() => move(paging.index - 1)}>
-              <i class="left chevron icon"></i>
-            </a>
-
-            <div class="item">
-              {paging.index} di {paging.pages}
-            </div>
-
-            <a class="icon item" on:click={()=>move(paging.index + 1)}>
-              <i class="right chevron icon"></i>
-            </a>
+    {#if options.show_footer}
+      <tfoot>
+      <tr>
+        <th colspan="{1}">
+          <div class="ui left aligned container">
+            {paging.boundaries[0] + 1} -  {paging.boundaries[1]}
           </div>
-        </div>
-      </th>
-      <th colspan="{1}">
-        <div class="ui right aligned container">
-          {$store.length}
-        </div>
-      </th>
-    </tr>
-    </tfoot>
+        </th>
+        <th colspan="{headers.length - 2}">
+          <div class="ui center aligned container">
+            <div class="ui pagination menu">
+
+              <a class="icon item" on:click={() => move(paging.index - 1)}>
+                <i class="left chevron icon"></i>
+              </a>
+
+              <div class="item">
+                {paging.index} di {paging.pages}
+              </div>
+
+              <a class="icon item" on:click={()=>move(paging.index + 1)}>
+                <i class="right chevron icon"></i>
+              </a>
+            </div>
+          </div>
+        </th>
+        <th colspan="{1}">
+          <div class="ui right aligned container">
+            {$store.length}
+          </div>
+        </th>
+      </tr>
+      </tfoot>
+    {/if}
   </table>
 
 </div>
