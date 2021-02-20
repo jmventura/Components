@@ -18,6 +18,10 @@ export default function Store(records) {
 
   filter_criteria.subscribe(apply);
 
+  /**
+   * Resets the store, if new records are passed it overwrites the cache
+   * @param {Array<{}>} records
+   */
   function reset(records) {
     if (records) cache = records;
 

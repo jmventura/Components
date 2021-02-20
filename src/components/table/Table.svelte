@@ -108,6 +108,15 @@
           {/each}
         </tr>
       {/each}
+      {#each Array(paging.size - paging.current.length) as item}
+        <tr>
+          {#each headers as header}
+            {#if (header !== 'id')}
+              <td class:sorted={sorting.key === header}>&zwnj;</td>
+            {/if}
+          {/each}
+        </tr>
+      {/each}
     {:else}
       {#each Array(paging.size) as item}
         <tr>
@@ -128,7 +137,7 @@
     <tr>
       <th colspan="{1}">
         <div class="ui left aligned container">
-          {paging.boundaries[0]} -  {paging.boundaries[1]}
+          {paging.boundaries[0] + 1} -  {paging.boundaries[1]}
         </div>
       </th>
       <th colspan="{headers.length - 2}">
@@ -175,7 +184,8 @@
 
     td.sorted,
     .ui.selectable.table tbody tr:hover {
-        background: #effabb
+        background: #effabb;
+        height: 8px;
     }
 
     .sticky {
