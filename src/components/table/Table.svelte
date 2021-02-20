@@ -1,7 +1,9 @@
 <script>
   import {createEventDispatcher} from 'svelte';
   import {writable} from 'svelte/store';
+  import Store from './Store';
 
+  export let store   = Store([]);
   export let options = {
     columns:      {},
     show_headers: true,
@@ -10,7 +12,6 @@
     icon:         row => row,
     marker:       row => row
   };
-  export let store;
 
   const headers    = Object.entries(options.columns);
   const selected   = writable(null);
@@ -123,9 +124,7 @@
   {#each paging.current as item}
     <tr class:selected={$selected === item} class="{marker(item)}" on:click={() => selected.set(item)}>
       {#each headers as header, i}
-        {#if (header !== 'id')}
-          <td class:sorted={sorting.key === header}>{@html icon(i, item)} {item[header[0]]} </td>
-        {/if}
+        <td class:sorted={sorting.key === header}>{@html icon(i, item)} {item[header[0]]} </td>
       {/each}
     </tr>
   {/each}
@@ -193,10 +192,6 @@
 </table>
 
 <style>
-    .ui.segment {
-        margin: 0;
-    }
-
     th {
         font-weight: bold;
     }

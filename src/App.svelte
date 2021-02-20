@@ -30,7 +30,7 @@
       <button class="ui basic blue button" on:click={filter(name)}>{name}</button>
     {/each}
 
-    <button class="ui basic red button" on:click={()=>store.reset()}>Reset filter</button>
+    <button class="ui basic red button" on:click={() => store.reset()}>Reset filter</button>
   </div>
 
   <Table {store} {options} on:select={item => console.log(item.detail)}/>
