@@ -2,10 +2,17 @@
   import {createEventDispatcher} from 'svelte';
   import {writable} from 'svelte/store';
 
-  export let headers = [];
+  export let options = {
+    columns:      {},
+    show_headers: true,
+    show_search:  true,
+    show_footer:  true,
+    icon:         row => row,
+    marker:       row => row
+  };
   export let store;
-  export let options = {show_headers: true, show_search: true, show_footer: true};
 
+  const headers    = Object.entries(options.columns);
   const selected   = writable(null);
   const dispatch   = createEventDispatcher();
   const sorting    = {asc: false, key: null, icon: ''};
@@ -33,6 +40,25 @@
 
     paging.boundaries[0] = (paging.index - 1) * paging.size;
     paging.boundaries[1] = paging.index === paging.size ? $store.length : paging.boundaries[0] + paging.current.length;
+  }
+
+  function marker(item) {
+    if (options.marker && typeof options.marker === 'function') {
+      const marker = options.marker(item);
+      return marker ? `left marked ${options.marker(item)}` : '';
+    }
+
+    return '';
+  }
+
+  function icon(item) {
+    if (options.icon && typeof options.icon === 'function') {
+      const icon = options.icon(item);
+
+      return icon ? `<i class="${icon} icon"></i>` : '';
+    }
+
+    return '';
   }
 
   function sort(field) {
@@ -77,11 +103,11 @@
     {#if options.show_headers}
       <tr>
         {#each headers as header}
-          <th class="sticky four wide" on:click={()=> sort(header)}>
+          <th class="sticky four wide" on:click={()=> sort(header[0])}>
             <div class="ui items">
               <div class="item">
                 <div class="ui left aligned content">
-                  {header.toUpperCase()}
+                  {header[1].toUpperCase()}
                 </div>
                 <div class="ui right aligned content">
                   <i class="{header === sorting.key ? sorting.icon: ''}"></i>
@@ -97,12 +123,10 @@
     <!-- BODY -->
     <tbody>
     {#each paging.current as item}
-      <tr class={item === $selected ? 'selected' : ''} on:click={()=> selected.set(item)}>
-        {#each headers as header}
+      <tr class:selected={$selected === item} class="{marker(item)}" on:click={() => selected.set(item)}>
+        {#each headers as header, i}
           {#if (header !== 'id')}
-            <td class:sorted={sorting.key === header}>
-              {item[header]}
-            </td>
+            <td class:sorted={sorting.key === header}>{@html icon(item)} {item[header[0]]} </td>
           {/if}
         {/each}
       </tr>
@@ -181,14 +205,13 @@
         font-weight: bold;
     }
 
-    .ui.ui.selectable.table > tbody > tr.selected {
-        background-color: #effabb;
+    td.sorted,
+    .ui.selectable.table tbody tr.selected {
+        background: #effabb;
     }
 
-    td.sorted,
     .ui.selectable.table tbody tr:hover {
-        background: #effabb;
-        height: 8px;
+        background: #f3fce5;
     }
 
     .sticky {

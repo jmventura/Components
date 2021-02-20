@@ -90,7 +90,6 @@ export default [
       "key": "regular",
       "title": "Ordinario",
       "amount": 114,
-      "selected": true
     }
   },
   {

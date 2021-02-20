@@ -42,7 +42,7 @@ export default function Store(records) {
 
   function search(item) {
     const values = Object.keys(item).filter(key => key !== 'id').map(key => item[key]);
-    const string = values.map(value => value.toLowerCase()).join(' ');
+    const string = values.map(value => value ? value.toString().toLowerCase() : '').join(' ');
 
     return string.includes(get(search_criteria).toLowerCase());
   }
