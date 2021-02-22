@@ -2,6 +2,7 @@
   import {createEventDispatcher} from 'svelte';
   import {writable} from 'svelte/store';
   import Store from './Store';
+  import Cell from './Cell.svelte';
 
   export let store   = Store([]);
   export let options = {
@@ -53,16 +54,6 @@
     return '';
   }
 
-  function icon(i, item) {
-    if (i === 0 && options.icon && typeof options.icon === 'function') {
-      const icon = options.icon(item);
-
-      return icon ? `<i class="${icon} icon"></i>` : '';
-    }
-
-    return '';
-  }
-
   function sort(field) {
     store.update(values => values.sort(function (a, b) {
       a = a[field].toLowerCase();
@@ -109,9 +100,13 @@
               <div class="ui left aligned content">
                 {header[1].toUpperCase()}
               </div>
-              <div class="ui right aligned content">
-                <i class="{header === sorting.key ? sorting.icon: ''}"></i>
-              </div>
+
+              {#if header[0] === sorting.key}
+                <div class="ui right aligned content">
+                  <i class="{sorting.icon}"></i>
+                </div>
+              {/if}
+
             </div>
           </div>
         </th>
@@ -123,9 +118,9 @@
   <!-- BODY -->
   <tbody>
   {#each paging.current as item}
-    <tr class:selected={$selected === item} class="{marker(item)}" on:click={() => selected.set(item)}>
+    <tr class:selected={$selected === item} class="{marker(item)}" on:dblclick={() => selected.set(item)}>
       {#each headers as header, i}
-        <td class:sorted={sorting.key === header}>{@html icon(i, item)} {item[header[0]]} </td>
+        <Cell icon="{i===0 ? options.icon(item): ''}" text="{item[header[0]]}" copy="{i===3}"/>
       {/each}
     </tr>
   {/each}
