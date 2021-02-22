@@ -8,7 +8,6 @@
   function clipboard(value) {
     const el = document.createElement('textarea');
     el.value = value;
-    el.setAttribute('readonly', '');
     document.body.appendChild(el);
     el.select();
     document.execCommand('copy');
@@ -20,7 +19,12 @@
 <td class:hover on:mouseenter={() => hover = true} on:mouseleave={() => hover = false}>
   <div class="ui items">
     <div class="item">
-      {#if icon}<i class="{icon} icon"></i>{/if}
+      {#if icon}
+        <div>
+          <i class="{icon} icon"></i>
+          &zwnj;
+        </div>
+      {/if}
 
       <div class="ui left aligned content">
         {text}
