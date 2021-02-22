@@ -1,10 +1,20 @@
 <script>
+  export let row;
   export let icon  = '';
   export let text  = '';
   export let copy  = false;
   export let hover = false;
 
-  copy = s => console.log(s);
+  function clipboard(value) {
+    const el = document.createElement('textarea');
+    el.value = value;
+    el.setAttribute('readonly', '');
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+  }
+
 </script>
 
 <td class:hover on:mouseenter={() => hover = true} on:mouseleave={() => hover = false}>
@@ -18,7 +28,7 @@
 
       {#if copy}
         <div class="ui right aligned content">
-          <i class="clipboard outline icon" on:click={() => copy(text)}></i>
+          <i class="clipboard outline icon" on:click={()=>clipboard(text)}></i>
         </div>
       {/if}
 

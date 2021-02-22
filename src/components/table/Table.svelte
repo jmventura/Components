@@ -125,7 +125,7 @@
     <tr class:selected={selected === item.id} class="{marker(item)}" on:click={() => select(item.id)}
         on:dblclick={()=> dispatch('action', item.id)}>
       {#each headers as header, i}
-        <Cell icon="{i===0 ? options.icon(item): ''}" text="{item[header[0]]}" copy="{i===3}"/>
+        <Cell row="{item.id}" icon="{i===0 ? options.icon(item): ''}" text="{item[header[0]]}" copy="{i===3}"/>
       {/each}
     </tr>
   {/each}
