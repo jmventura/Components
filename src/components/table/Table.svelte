@@ -4,8 +4,9 @@
   import Store from './Store';
   import Cell from './Cell.svelte';
 
-  export let store   = Store([]);
-  export let options = {
+  export let store    = Store([]);
+  export let selected = null;
+  export let options  = {
     columns:      {},
     show_headers: true,
     show_search:  true,
@@ -15,15 +16,18 @@
   };
 
   const headers  = Object.entries(options.columns);
-  const selected = writable(null);
   const dispatch = createEventDispatcher();
   const sorting  = {asc: false, key: null, icon: ''};
   const paging   = {index: 1, current: [], pages: 0, size: 12, boundaries: []};
   const criteria = writable('');
 
   criteria.subscribe(store.search);
-  selected.subscribe(item => dispatch('select', item));
   store.subscribe(paginate);
+
+  function select(id) {
+    selected = id;
+    dispatch('select', selected);
+  }
 
   function paginate(records) {
     if (records.length <= paging.size) {
@@ -118,7 +122,8 @@
   <!-- BODY -->
   <tbody>
   {#each paging.current as item}
-    <tr class:selected={$selected === item} class="{marker(item)}" on:dblclick={() => selected.set(item)}>
+    <tr class:selected={selected === item.id} class="{marker(item)}" on:click={() => select(item.id)}
+        on:dblclick={()=> dispatch('action', item.id)}>
       {#each headers as header, i}
         <Cell icon="{i===0 ? options.icon(item): ''}" text="{item[header[0]]}" copy="{i===3}"/>
       {/each}

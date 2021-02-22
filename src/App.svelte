@@ -33,5 +33,5 @@
     <button class="ui basic red button" on:click={() => store.reset()}>Reset filter</button>
   </div>
 
-  <Table {store} {options} on:select={item => console.log(item.detail)}/>
+  <Table {store} {options} on:action={item => console.log(item.detail)}/>
 </div>
