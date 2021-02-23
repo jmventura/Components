@@ -123,9 +123,9 @@
   <tbody>
   {#each paging.current as item}
     <tr class:selected={selected === item.id} class="{marker(item)}" on:click={() => select(item.id)}
-        on:dblclick={()=> dispatch('action', item.id)}>
+        on:click={()=> dispatch('action', item.id)}>
       {#each headers as header, i}
-        <Cell row="{item.id}" icon="{i===0 ? options.icon(item): ''}" text="{item[header[0]]}" copy="{i===3}"/>
+        <Cell row="{item.id}" icon="{i===0 ? options.icon(item): ''}" text="{item[header[0]].trim()}" copy="{i > 1}"/>
       {/each}
     </tr>
   {/each}

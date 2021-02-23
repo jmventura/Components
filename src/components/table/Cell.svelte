@@ -5,7 +5,8 @@
   export let copy  = false;
   export let hover = false;
 
-  function clipboard(value) {
+  function clipboard(value, e) {
+    e.stopPropagation();
     const el = document.createElement('textarea');
     el.value = value;
     document.body.appendChild(el);
@@ -32,7 +33,7 @@
 
       {#if copy}
         <div class="ui right aligned content">
-          <i class="clipboard outline icon" on:click={()=>clipboard(text)}></i>
+          <i class="clipboard outline icon" on:click={clipboard.bind(null, text)}></i>
         </div>
       {/if}
 
