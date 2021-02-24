@@ -15,17 +15,18 @@
     marker:       row => row
   };
 
-  const headers  = Object.entries(options.columns);
-  const dispatch = createEventDispatcher();
-  const sorting  = {asc: false, key: null, icon: ''};
-  const paging   = {index: 1, current: [], pages: 0, size: 12, boundaries: []};
-  const criteria = writable('');
+  const headers   = Object.entries(options.columns);
+  const dispatch  = createEventDispatcher();
+  const sorting   = {asc: false, key: null, icon: ''};
+  const paging    = {index: 1, current: [], pages: 0, size: 12, boundaries: []};
+  const criteria  = writable('');
+  const clipboard = writable('');
 
   criteria.subscribe(store.search);
   store.subscribe(paginate);
 
-  function select(item) {
-    selected = item;
+  function select(id) {
+    selected = id;
     dispatch('select', selected);
   }
 
@@ -122,9 +123,15 @@
   <!-- BODY -->
   <tbody>
   {#each paging.current as item}
-    <tr class:selected={selected === item.id} class="{marker(item)}" on:click={() => select(item)}>
+    <tr class:selected={selected === item.id} class="{marker(item)}" on:click={() => select(item.id)}
+        on:dblclick={()=> dispatch('action', item.id)}>
       {#each headers as header, i}
-        <Cell row="{item.id}" icon="{i===0 ? options.icon(item): ''}" text="{item[header[0]].trim()}" copy="{i > 1}"/>
+        <Cell row="{item.id}"
+              icon="{i===0 ? options.icon(item): ''}"
+              text="{item[header[0]]}"
+              copy="{i===3}"
+              {clipboard}
+              />
       {/each}
     </tr>
   {/each}

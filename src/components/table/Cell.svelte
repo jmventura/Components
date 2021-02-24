@@ -1,20 +1,25 @@
 <script>
-  export let row;
-  export let icon  = '';
-  export let text  = '';
-  export let copy  = false;
-  export let hover = false;
+  import {writable} from 'svelte/store';
 
-  function clipboard(value, e) {
-    e.stopPropagation();
+  export let row;
+  export let icon      = '';
+  export let text      = '';
+  export let copy      = false;
+  export let clipboard = writable(null);
+  export let hover     = false;
+
+  let copied = '';
+
+  function docopy(value) {
+    copied   = value;
     const el = document.createElement('textarea');
     el.value = value;
     document.body.appendChild(el);
     el.select();
     document.execCommand('copy');
     document.body.removeChild(el);
+    clipboard.set(value);
   }
-
 </script>
 
 <td class:hover on:mouseenter={() => hover = true} on:mouseleave={() => hover = false}>
@@ -27,13 +32,13 @@
         </div>
       {/if}
 
-      <div class="ui left aligned content">
+      <div class="ui left aligned content" class:iconed={copy}>
         {text}
       </div>
 
-      {#if copy}
+      {#if copy && text.trim().length > 0}
         <div class="ui right aligned content">
-          <i class="clipboard outline icon" on:click={clipboard.bind(null, text)}></i>
+          <i class="clipboard icon" class:outline={$clipboard !==text} on:click={()=>docopy(text)}></i>
         </div>
       {/if}
 
@@ -43,11 +48,17 @@
 </td>
 
 <style>
-    .clipboard.outline.icon {
+    .iconed {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .clipboard.icon {
         visibility: hidden;
     }
 
-    .hover .clipboard.outline.icon {
+    .hover .clipboard.icon {
         visibility: visible;
     }
 </style>
