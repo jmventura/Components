@@ -11,6 +11,7 @@
     show_headers: true,
     show_search:  true,
     show_footer:  true,
+    copy:         [],
     icon:         row => row,
     marker:       row => row
   };
@@ -126,12 +127,13 @@
     <tr class:selected={selected === item.id} class="{marker(item)}" on:click={() => select(item.id)}
         on:dblclick={()=> dispatch('action', item.id)}>
       {#each headers as header, i}
-        <Cell row="{item.id}"
-              icon="{i===0 ? options.icon(item): ''}"
-              text="{item[header[0]]}"
-              copy="{i===3}"
-              {clipboard}
-              />
+        <Cell
+            row="{item.id}"
+            icon="{i === 0 ? options.icon(item): ''}"
+            text="{item[header[0]]}"
+            copy="{options.copy.includes(i)}"
+            {clipboard}
+        />
       {/each}
     </tr>
   {/each}

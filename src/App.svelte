@@ -17,6 +17,7 @@
     show_search:  true,
     show_headers: true,
     show_footer:  true,
+    copy:         [2, 3],
     icon:         row => row.membership === 'family-member' ? 'users' : null,
     marker:       row => row.amount !== 114 ? 'red' : null
   };

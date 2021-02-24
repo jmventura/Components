@@ -38,7 +38,7 @@
 
       {#if copy && text.trim().length > 0}
         <div class="ui right aligned content">
-          <i class="clipboard icon" class:outline={$clipboard !==text} on:click={()=>docopy(text)}></i>
+          <i class="clipboard icon" class:outline={$clipboard !== text} on:click={()=>docopy(text)}></i>
         </div>
       {/if}
 
