@@ -12,6 +12,7 @@
     membership: contact.membership.key,
     amount:     contact.membership.amount || 0
   })));
+
   const options     = {
     columns:      {name_first: 'nome', name_last: 'cognome', phone: 'telefono', email: 'e-mail'},
     show_search:  true,
@@ -20,6 +21,7 @@
     icon:         row => row.membership === 'family-member' ? 'users' : null,
     marker:       row => row.amount !== 114 ? 'red' : null
   };
+
   const memberships = new Set(contacts.map(contact => contact.membership.key));
   const filter      = name => () => store.filter(item => item.membership === name);
 </script>
@@ -33,5 +35,5 @@
     <button class="ui basic red button" on:click={() => store.reset()}>Reset filter</button>
   </div>
 
-  <Table {store} {options} on:action={item => console.log(item.detail)}/>
+  <Table {store} {options} on:select={item => console.log(item.detail)}/>
 </div>
