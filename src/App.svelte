@@ -3,6 +3,7 @@
   import contacts from './components/table/contacts.js';
   import Store from './components/table/Store';
 
+  let selected      = 'reset';
   const store       = Store(contacts.map(contact => ({
     id:         contact.id,
     name_first: contact.names.first,
@@ -17,21 +18,35 @@
     show_search:  true,
     show_headers: true,
     show_footer:  true,
+    page_size:    15,
     copy:         [2, 3],
     icon:         row => row.membership === 'family-member' ? 'users' : null,
     marker:       row => row.amount !== 114 ? 'red' : null
   };
   const memberships = new Set(contacts.map(contact => contact.membership.key));
-  const filter      = name => () => store.filter(item => item.membership === name);
+
+  function filter(name) {
+    selected = name;
+    return store.filter(item => item.membership === name);
+  }
+
+  function reset() {
+    selected = 'reset';
+    store.reset();
+  }
 </script>
 
 <div class="ui basic segment">
   <div class="ui buttons fluid">
     {#each [...memberships].sort() as name}
-      <button class="ui basic blue button" on:click={filter(name)}>{name}</button>
+      <button class="ui blue button" class:basic={selected !== name} on:click={filter.bind(null, name)}>
+        {name}
+      </button>
     {/each}
 
-    <button class="ui basic red button" on:click={() => store.reset()}>Reset filter</button>
+    <button class="ui red button" class:basic={selected !== 'reset'} on:click={reset}>
+      All records
+    </button>
   </div>
 
   <Table {store} {options} on:action={item => console.log(item.detail)}/>

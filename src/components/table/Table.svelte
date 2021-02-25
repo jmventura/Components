@@ -11,6 +11,7 @@
     show_headers: true,
     show_search:  true,
     show_footer:  true,
+    page_size:    10,
     copy:         [],
     icon:         row => row,
     marker:       row => row
@@ -18,8 +19,8 @@
 
   const headers   = Object.entries(options.columns);
   const dispatch  = createEventDispatcher();
-  const sorting   = {asc: false, key: null, icon: ''};
-  const paging    = {index: 1, current: [], pages: 0, size: 12, boundaries: []};
+  const sorting   = {asc: true, key: null, icon: ''};
+  const paging    = {index: 1, current: [], pages: 0, size: options.page_size, boundaries: []};
   const criteria  = writable('');
   const clipboard = writable('');
 
