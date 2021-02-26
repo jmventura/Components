@@ -62,6 +62,10 @@
   }
 
   function sort(field) {
+    sorting.asc  = sorting.key === field ? !sorting.asc : sorting.asc;
+    sorting.key  = field;
+    sorting.icon = !sorting.asc ? 'sort alphabet up icon grey' : 'sort alphabet down icon grey';
+
     store.update(values => values.sort(function (a, b) {
       a = a[field].toLowerCase();
       b = b[field].toLowerCase();
@@ -69,9 +73,6 @@
       return sorting.asc ? a >= b ? 1 : -1 : a <= b ? 1 : -1;
     }));
 
-    sorting.key  = field;
-    sorting.asc  = !sorting.asc;
-    sorting.icon = sorting.asc ? 'sort alphabet up icon grey' : 'sort alphabet down icon grey';
     paginate($store);
   }
 
