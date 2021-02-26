@@ -18,7 +18,7 @@
     show_search:  true,
     show_headers: true,
     show_footer:  true,
-    page_size:    15,
+    page_size:    17,
     copy:         [2, 3],
     icon:         row => row.membership === 'family-member' ? 'users' : null,
     marker:       row => row.amount !== 114 ? 'red' : null
@@ -49,5 +49,5 @@
     </button>
   </div>
 
-  <Table {store} {options} on:action={item => console.log(item.detail)}/>
+  <Table {store} {options} on:select={item => console.log(item.detail)}/>
 </div>

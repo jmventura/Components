@@ -1,16 +1,17 @@
 <script>
   import {writable} from 'svelte/store';
 
-  export let row;
   export let icon      = '';
   export let text      = '';
   export let copy      = false;
   export let clipboard = writable(null);
   export let hover     = false;
+  export let sorted    = false;
 
   let copied = '';
 
-  function docopy(value) {
+  function capture(value, event) {
+    event.stopPropagation();
     copied   = value;
     const el = document.createElement('textarea');
     el.value = value;
@@ -22,7 +23,7 @@
   }
 </script>
 
-<td class:hover on:mouseenter={() => hover = true} on:mouseleave={() => hover = false}>
+<td class:hover on:mouseenter={() => hover = true} on:mouseleave={() => hover = false} class:sorted={sorted}>
   <div class="ui items">
     <div class="item">
       {#if icon}
@@ -38,7 +39,7 @@
 
       {#if copy && text.trim().length > 0}
         <div class="ui right aligned content">
-          <i class="clipboard icon" class:outline={$clipboard !== text} on:click={()=>docopy(text)}></i>
+          <i class="clipboard icon" class:outline={$clipboard !== text} on:click={capture.bind(null, text)}></i>
         </div>
       {/if}
 
@@ -48,6 +49,11 @@
 </td>
 
 <style>
+
+    td.sorted {
+        background: #effabb;
+    }
+
     .iconed {
         white-space: nowrap;
         overflow: hidden;

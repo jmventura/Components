@@ -72,6 +72,7 @@
     sorting.key  = field;
     sorting.asc  = !sorting.asc;
     sorting.icon = sorting.asc ? 'sort alphabet up icon grey' : 'sort alphabet down icon grey';
+    paginate($store);
   }
 
   function move(index) {
@@ -125,11 +126,10 @@
   <!-- BODY -->
   <tbody>
   {#each paging.current as item}
-    <tr class:selected={selected === item.id} class="{marker(item)}" on:click={() => select(item.id)}
-        on:dblclick={()=> dispatch('action', item.id)}>
+    <tr class:selected={selected === item.id} class="{marker(item)}" on:click={() => select(item.id)}>
       {#each headers as header, i}
         <Cell
-            row="{item.id}"
+            sorted="{header[0] === sorting.key}"
             icon="{i === 0 ? options.icon(item): ''}"
             text="{item[header[0]]}"
             copy="{options.copy.includes(i)}"
@@ -196,11 +196,6 @@
 <style>
     th {
         font-weight: bold;
-    }
-
-    td.sorted,
-    .ui.selectable.table tbody tr.selected {
-        background: #effabb;
     }
 
     .ui.selectable.table tbody tr:hover {
