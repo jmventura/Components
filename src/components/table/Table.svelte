@@ -126,7 +126,7 @@
   <!-- BODY -->
   <tbody>
   {#each paging.current as item}
-    <tr class:selected={selected === item.id} class="{marker(item)}" on:click={() => select(item.id)}>
+    <tr class:selected={selected === item} class="{marker(item)}" on:click={() => select(item)}>
       {#each headers as header, i}
         <Cell
             sorted="{header[0] === sorting.key}"
@@ -144,7 +144,7 @@
     <tr>
       {#each headers as header}
         {#if (header !== 'id')}
-          <td class:sorted={sorting.key === header}>&zwnj;</td>
+          <td class:sorted={header[0] === sorting.key}>&zwnj;</td>
         {/if}
       {/each}
     </tr>
@@ -196,6 +196,14 @@
 <style>
     th {
         font-weight: bold;
+    }
+
+    tr.selected {
+        background: #effabb;
+    }
+
+    td.sorted {
+        background: #effabb;
     }
 
     .ui.selectable.table tbody tr:hover {
